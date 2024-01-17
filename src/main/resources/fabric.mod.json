@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "leukocyte-plus",
+	"version": "${version}",
+	"name": "LeukocytePlus",
+	"description": "Adds missing rules to Leukocyte",
+	"authors": [
+	  	"Acuadragon100"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "Apache-2.0",
+	"icon": "assets/metacraft_zones/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"se.datasektionen.mc.leukocyte_plus.LeukocytePlus"
+		]
+	},
+	"mixins": [
+		"leukocyte-plus.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*",
+		"leukocyte": "*"
+	},
+	"suggests": {
+		"leukocyte": "*"
+	}
+}
