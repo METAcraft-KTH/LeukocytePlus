@@ -44,10 +44,9 @@ public class MixinBedBlock {
 		)
 	)
 	public void grabVarsForFireCheck(
-			BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand,
-			BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir,
-			@Share("world") LocalRef<World> worldVar, @Share("pos") LocalRef<BlockPos> posVar,
-			@Share("player") LocalRef<PlayerEntity> playerVar
+			BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit,
+			CallbackInfoReturnable<ActionResult> cir, @Share("world") LocalRef<World> worldVar,
+			@Share("pos") LocalRef<BlockPos> posVar, @Share("player") LocalRef<PlayerEntity> playerVar
 	) {
 		worldVar.set(world);
 		posVar.set(pos);
