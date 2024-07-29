@@ -2,7 +2,7 @@ package se.datasektionen.mc.leukocyte_plus.mixin;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.decoration.AbstractDecorationEntity;
+import net.minecraft.entity.decoration.BlockAttachedEntity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.util.ActionResult;
 import org.spongepowered.asm.mixin.Mixin;
@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import se.datasektionen.mc.leukocyte_plus.events.SpecialEntityDamageEvent;
 import xyz.nucleoid.stimuli.Stimuli;
 
-@Mixin(AbstractDecorationEntity.class)
-public class MixinAbstractDecorationEntity {
+@Mixin(BlockAttachedEntity.class)
+public class MixinBlockAttachedEntity {
 
 	@Inject(method = "damage", at = @At("HEAD"), cancellable = true)
 	public void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {

@@ -20,13 +20,13 @@
 		]
 	},
 	"mixins": [
-		"leukocyte-plus.mixins.json"
+		"leukocyte_plus.mixins.json"
 	],
+	"accessWidener": "leukocyte_plus.accesswidener",
 	"depends": {
-		"fabricloader": ">=0.14.21",
-		"minecraft": "~1.20.4",
-		"java": ">=17",
-		"fabric-api": "*",
+		"fabricloader": ">=${loader_version}",
+		"fabric": "*",
+		"minecraft": "~${minecraft_version}",
 		"leukocyte": "*"
 	},
 	"suggests": {

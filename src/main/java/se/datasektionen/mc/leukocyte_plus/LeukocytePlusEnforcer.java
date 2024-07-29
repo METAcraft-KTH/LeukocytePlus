@@ -24,6 +24,7 @@ import se.datasektionen.mc.leukocyte_plus.events.SpecialEntityDamageEvent;
 import se.datasektionen.mc.leukocyte_plus.events.WitherGriefEvent;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorBucketItem;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorItem;
+import se.datasektionen.mc.leukocyte_plus.mixin.AccessorServerChunkLoadingManager;
 import xyz.nucleoid.leukocyte.Leukocyte;
 import xyz.nucleoid.leukocyte.authority.IndexedAuthorityMap;
 import xyz.nucleoid.leukocyte.rule.ProtectionRule;
@@ -259,8 +260,13 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				) {
 					if (!rule.isAccepted()) {
 						syncHandStack(player, hand);
+
+						var tracker = ((AccessorServerChunkLoadingManager) player.getServerWorld().getChunkManager().chunkLoadingManager).getEntityTrackers().get(
+								entity.getId()
+						);
+						var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getEntry();
 						//Re-add the entity since the client will delete it even if we cancel the event.
-						player.networkHandler.sendPacket(entity.createSpawnPacket());
+						player.networkHandler.sendPacket(entity.createSpawnPacket(entry));
 					}
 					return rule.isAccepted() ? ActionResult.PASS : rule;
 				}

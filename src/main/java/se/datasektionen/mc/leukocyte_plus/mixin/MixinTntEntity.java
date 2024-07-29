@@ -61,6 +61,7 @@ public abstract class MixinTntEntity extends Entity {
 	public void writeNBT(NbtCompound nbt, CallbackInfo ci) {
 		nbt.putInt(TIME_SINCE_FUSE_IGNITED, timeSinceFuseIgnited);
 	}
+
 	@Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
 	public void readNBT(NbtCompound nbt, CallbackInfo ci) {
 		if (nbt.contains(TIME_SINCE_FUSE_IGNITED)) {

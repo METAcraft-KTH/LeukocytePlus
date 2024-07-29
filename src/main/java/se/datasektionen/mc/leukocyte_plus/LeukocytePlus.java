@@ -19,6 +19,6 @@ public class LeukocytePlus implements ModInitializer {
 	}
 
 	public static Identifier getID(String name) {
-		return new Identifier(MODID, name);
+		return Identifier.of(MODID, name);
 	}
 }
