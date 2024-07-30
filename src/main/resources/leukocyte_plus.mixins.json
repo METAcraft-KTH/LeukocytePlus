@@ -16,11 +16,13 @@
 		"MixinFireballEntity",
 		"MixinItemFrameEntity",
 		"MixinLightningEntity",
+		"MixinProjectileEntity",
 		"MixinRespawnAnchorBlock",
 		"MixinTntEntity",
 		"MixinTntMinecartEntity",
 		"MixinWitherEntity",
-		"MixinWitherSkullEntity"
+		"MixinWitherSkullEntity",
+		"MixinWolfEntity"
 	],
 	"injectors": {
 		"defaultRequire": 1

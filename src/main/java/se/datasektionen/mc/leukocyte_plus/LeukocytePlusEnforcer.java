@@ -9,19 +9,22 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.decoration.painting.PaintingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.*;
 import net.minecraft.network.packet.s2c.play.ScreenHandlerSlotUpdateS2CPacket;
+import net.minecraft.server.network.PlayerAssociatedNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerChunkLoadingManager;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.world.RaycastContext;
-import se.datasektionen.mc.leukocyte_plus.events.ExplosionEvents;
-import se.datasektionen.mc.leukocyte_plus.events.FireEvents;
-import se.datasektionen.mc.leukocyte_plus.events.SpecialEntityDamageEvent;
-import se.datasektionen.mc.leukocyte_plus.events.WitherGriefEvent;
+import se.datasektionen.mc.leukocyte_plus.events.*;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorBucketItem;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorItem;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorServerChunkLoadingManager;
@@ -35,9 +38,11 @@ import xyz.nucleoid.stimuli.event.EventRegistrar;
 import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.entity.EntityUseEvent;
 import xyz.nucleoid.stimuli.event.item.ItemUseEvent;
+import xyz.nucleoid.stimuli.event.projectile.ProjectileHitEvent;
 
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
@@ -260,13 +265,8 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				) {
 					if (!rule.isAccepted()) {
 						syncHandStack(player, hand);
-
-						var tracker = ((AccessorServerChunkLoadingManager) player.getServerWorld().getChunkManager().chunkLoadingManager).getEntityTrackers().get(
-								entity.getId()
-						);
-						var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getEntry();
 						//Re-add the entity since the client will delete it even if we cancel the event.
-						player.networkHandler.sendPacket(entity.createSpawnPacket(entry));
+						restoreEntityForClient(entity, player);
 					}
 					return rule.isAccepted() ? ActionResult.PASS : rule;
 				}
@@ -282,10 +282,75 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 			return preventPlace(stack -> stack.isOf(Items.FLINT_AND_STEEL) || stack.isOf(Items.FIRE_CHARGE), rule);
 		});
 
+		this.forRule(
+				events, ruleMap.test(LeukocytePlusRules.PROJECTILES_BREAK_BLOCKS).orElse(
+						ruleMap.test(ProtectionRule.BREAK)
+				)
+		).applySimple(ProjectileBreaksBlocks.EVENT, rule -> {
+			return (projectile, world) -> rule;
+		});
+
 		//This is just for consistency, vanilla leukocyte does prevent placement of powder snow with the place rule, but not picking it up with a bucket.
 		this.forRule(events, ruleMap.test(ProtectionRule.BREAK)).applySimple(ItemUseEvent.EVENT, rule -> {
 			return preventFluidPickup(Blocks.POWDER_SNOW, Blocks.POWDER_SNOW_CAULDRON, rule);
 		});
+
+
+		this.forRule(events, ruleMap.test(ProtectionRule.PVP)).applySimple(TamedWolfAggroEvent.EVENT, rule -> {
+			return (wolf, owner, target) -> target instanceof PlayerEntity ? rule : ActionResult.PASS;
+		});
+		this.forRule(events, ruleMap.test(ProtectionRule.ATTACK)).applySimple(TamedWolfAggroEvent.EVENT, rule -> {
+			return (wolf, owner, target) -> rule;
+		});
+
+
+		this.forRule(events, ruleMap.test(ProtectionRule.PVP)).applySimple(ProjectileHitEvent.ENTITY, rule -> {
+			return (projectile, result) -> fixProjectile(projectile, result.getEntity() instanceof PlayerEntity ? rule : ActionResult.PASS);
+		});
+		this.forRule(events, ruleMap.test(ProtectionRule.ATTACK)).applySimple(ProjectileHitEvent.ENTITY, rule -> {
+			return (projectile, result) -> fixProjectile(projectile, rule);
+		});
+	}
+
+	protected void restoreEntityForClients(Entity entity) {
+		if (entity.getWorld() instanceof ServerWorld world) {
+			var tracker = ((AccessorServerChunkLoadingManager) world.getChunkManager().chunkLoadingManager).getEntityTrackers().get(
+					entity.getId()
+			);
+			restoreEntityForClients(
+					entity,
+					((AccessorServerChunkLoadingManager.EntityTracker) tracker).getListeners().stream().map(
+							PlayerAssociatedNetworkHandler::getPlayer
+					),
+					tracker
+			);
+		}
+	}
+
+	protected void restoreEntityForClients(
+			Entity entity, Stream<ServerPlayerEntity> players,
+			ServerChunkLoadingManager.EntityTracker tracker
+	) {
+		var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getEntry();
+		players.forEach(player -> player.networkHandler.sendPacket(entity.createSpawnPacket(entry)));
+	}
+
+	protected void restoreEntityForClients(Entity entity, ServerWorld world, Stream<ServerPlayerEntity> players) {
+		var tracker = ((AccessorServerChunkLoadingManager) world.getChunkManager().chunkLoadingManager).getEntityTrackers().get(
+				entity.getId()
+		);
+		restoreEntityForClients(entity, players, tracker);
+	}
+
+	protected void restoreEntityForClient(Entity entity, ServerPlayerEntity player) {
+		restoreEntityForClients(entity, player.getServerWorld(), Stream.of(player));
+	}
+
+	protected ActionResult fixProjectile(ProjectileEntity projectile, ActionResult rule) {
+		if (rule == ActionResult.FAIL && projectile instanceof PersistentProjectileEntity) {
+			restoreEntityForClients(projectile);
+		}
+		return rule;
 	}
 
 	protected SpecialEntityDamageEvent preventBreaking(BiPredicate<Entity, DamageSource> predicate, ActionResult rule) {
