@@ -16,6 +16,7 @@ public class LeukocytePlus implements ModInitializer {
 		LOGGER.info("Loaded LeukocytePlus by Acuadragon100");
 		Leukocyte.registerRuleEnforcer(LeukocytePlusEnforcer.INSTANCE);
 		LeukocytePlusRules.init();
+		Events.init();
 	}
 
 	public static Identifier getID(String name) {

@@ -23,6 +23,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.RaycastContext;
 import se.datasektionen.mc.leukocyte_plus.events.*;
 import se.datasektionen.mc.leukocyte_plus.mixin.AccessorBucketItem;
@@ -37,7 +38,6 @@ import xyz.nucleoid.stimuli.EventSource;
 import xyz.nucleoid.stimuli.event.EventRegistrar;
 import xyz.nucleoid.stimuli.event.block.BlockUseEvent;
 import xyz.nucleoid.stimuli.event.entity.EntityUseEvent;
-import xyz.nucleoid.stimuli.event.item.ItemUseEvent;
 import xyz.nucleoid.stimuli.event.projectile.ProjectileHitEvent;
 
 import java.util.function.BiPredicate;
@@ -224,13 +224,12 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.WATER_PLACE).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PLACE)
-		)).applySimple(ItemUseEvent.EVENT, rule -> {
-			return preventUse((player, hand) -> {
+		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
+			return preventUse((player, hand, pos) -> {
 				var stack = player.getStackInHand(hand);
 				if (stack.getItem() instanceof AccessorBucketItem bucket && bucket.getFluid().matchesType(Fluids.WATER)) {
 					if (stack.getItem() instanceof EntityBucketItem) {
-						var result = AccessorItem.callRaycast(player.getWorld(), player, RaycastContext.FluidHandling.SOURCE_ONLY);
-						return result.getType() == HitResult.Type.MISS || !player.getWorld().getBlockState(result.getBlockPos()).isOf(Blocks.WATER);
+						return !player.getWorld().getBlockState(pos).isOf(Blocks.WATER);
 					}
 					return true;
 				}
@@ -240,19 +239,19 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.WATER_PICKUP).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PICKUP)
-		)).applySimple(ItemUseEvent.EVENT, rule -> {
+		)).applySimple(ItemUseOnBlockEvent.INCLUDE_FLUIDS, rule -> {
 			return preventFluidPickup(Blocks.WATER, Blocks.WATER_CAULDRON, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.LAVA_PICKUP).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PICKUP)
-		)).applySimple(ItemUseEvent.EVENT, rule -> {
+		)).applySimple(ItemUseOnBlockEvent.INCLUDE_FLUIDS, rule -> {
 			return preventFluidPickup(Blocks.LAVA, Blocks.LAVA_CAULDRON, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.LAVA_PLACE).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PLACE)
-		)).applySimple(ItemUseEvent.EVENT, rule -> {
+		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
 			return preventUse(stack -> stack.getItem() instanceof AccessorBucketItem bucket && bucket.getFluid().matchesType(Fluids.LAVA), rule);
 		});
 
@@ -274,7 +273,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 			};
 		});
 
-		this.forRule(events, ruleMap.test(LeukocytePlusRules.PLACE_FISH)).applySimple(ItemUseEvent.EVENT, rule -> {
+		this.forRule(events, ruleMap.test(LeukocytePlusRules.PLACE_FISH)).applySimple(ItemUseOnBlockEvent.INCLUDE_FLUIDS, rule -> {
 			return preventUse(stack -> stack.getItem() instanceof EntityBucketItem, rule);
 		});
 
@@ -291,7 +290,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		});
 
 		//This is just for consistency, vanilla leukocyte does prevent placement of powder snow with the place rule, but not picking it up with a bucket.
-		this.forRule(events, ruleMap.test(ProtectionRule.BREAK)).applySimple(ItemUseEvent.EVENT, rule -> {
+		this.forRule(events, ruleMap.test(ProtectionRule.BREAK)).applySimple(ItemUseOnBlockEvent.INCLUDE_FLUIDS, rule -> {
 			return preventFluidPickup(Blocks.POWDER_SNOW, Blocks.POWDER_SNOW_CAULDRON, rule);
 		});
 
@@ -383,12 +382,12 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		return preventBreaking(entityClass::isInstance, rule);
 	}
 
-	protected ItemUseEvent preventUse(Item item, ActionResult rule) {
+	protected ItemUseOnBlockEvent preventUse(Item item, ActionResult rule) {
 		return preventUse(stack -> stack.isOf(item), rule);
 	}
 
-	protected ItemUseEvent preventFluidPickup(Block fluid, Block cauldron, ActionResult rule) {
-		return preventUse((player, hand) -> {
+	protected ItemUseOnBlockEvent preventFluidPickup(Block fluid, Block cauldron, ActionResult rule) {
+		return preventUse((player, hand, pos) -> {
 			var handStack = player.getStackInHand(hand);
 			if (handStack.isOf(Items.BUCKET) && rule == ActionResult.FAIL) {
 				var result = AccessorItem.callRaycast(player.getWorld(), player, RaycastContext.FluidHandling.SOURCE_ONLY);
@@ -413,9 +412,9 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		}, rule);
 	}
 
-	protected ItemUseEvent preventUse(BiPredicate<ServerPlayerEntity, Hand> checker, ActionResult rule) {
-		return (player, hand) -> {
-			if (checker.test(player, hand) && rule == ActionResult.FAIL) {
+	protected ItemUseOnBlockEvent preventUse(PlayerHandPredicate checker, ActionResult rule) {
+		return (player, hand, pos) -> {
+			if (checker.test(player, hand, pos) && rule == ActionResult.FAIL) {
 				syncHandStack(player, hand);
 				return new TypedActionResult<>(rule, player.getStackInHand(hand));
 			}
@@ -423,13 +422,17 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		};
 	}
 
-	protected ItemUseEvent preventUse(Predicate<ItemStack> checker, ActionResult rule) {
-		return preventUse((player, hand) -> checker.test(player.getStackInHand(hand)), rule);
+	public interface PlayerHandPredicate {
+		boolean test(ServerPlayerEntity player, Hand hand, BlockPos pos);
 	}
 
-	protected BlockUseEvent preventPlace(BiPredicate<ServerPlayerEntity, Hand> checker, ActionResult rule) {
+	protected ItemUseOnBlockEvent preventUse(Predicate<ItemStack> checker, ActionResult rule) {
+		return preventUse((player, hand, pos) -> checker.test(player.getStackInHand(hand)), rule);
+	}
+
+	protected BlockUseEvent preventPlace(PlayerHandPredicate checker, ActionResult rule) {
 		return (player, hand, hitResult) -> {
-			if (checker.test(player, hand)) {
+			if (checker.test(player, hand, hitResult.getBlockPos())) {
 				if (!rule.isAccepted()) {
 					syncHandStack(player, hand);
 				}
@@ -441,7 +444,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected BlockUseEvent preventPlace(Predicate<ItemStack> checker, ActionResult rule) {
-		return preventPlace((player, hand) -> checker.test(player.getStackInHand(hand)), rule);
+		return preventPlace((player, hand, pos) -> checker.test(player.getStackInHand(hand)), rule);
 	}
 
 	protected BlockUseEvent preventPlace(Item item, ActionResult rule) {
