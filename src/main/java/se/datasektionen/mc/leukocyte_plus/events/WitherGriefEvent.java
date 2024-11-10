@@ -2,8 +2,8 @@ package se.datasektionen.mc.leukocyte_plus.events;
 
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
-import net.minecraft.util.ActionResult;
 import org.jetbrains.annotations.Nullable;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
 public interface WitherGriefEvent {
@@ -12,16 +12,16 @@ public interface WitherGriefEvent {
 		try {
 			for (var listener : ctx.getListeners()) {
 				var result = listener.grief(wither, projectile);
-				if (result != ActionResult.PASS) {
+				if (result != EventResult.PASS) {
 					return result;
 				}
 			}
 		} catch (Throwable t) {
 			ctx.handleException(t);
 		}
-		return ActionResult.PASS;
+		return EventResult.PASS;
 	});
 
-	ActionResult grief(WitherEntity wither, @Nullable WitherSkullEntity projectile);
+	EventResult grief(WitherEntity wither, @Nullable WitherSkullEntity projectile);
 
 }

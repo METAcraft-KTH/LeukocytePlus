@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.6-SNAPSHOT'
+	id 'fabric-loom' version '1.8-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -18,9 +18,6 @@ repositories {
 	// for more information about repositories.
 
 	mavenLocal()
-
-	//Fabric Permissions API
-	maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
 
 	//Leukocyte
 	exclusiveContent {

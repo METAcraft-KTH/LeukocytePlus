@@ -5,7 +5,6 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.WitherEntity;
 import net.minecraft.entity.projectile.WitherSkullEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +12,7 @@ import se.datasektionen.mc.leukocyte_plus.events.ExplosionEvents;
 import se.datasektionen.mc.leukocyte_plus.events.FireEvents;
 import se.datasektionen.mc.leukocyte_plus.events.WitherGriefEvent;
 import xyz.nucleoid.stimuli.Stimuli;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
 import java.util.function.Function;
@@ -48,7 +48,7 @@ public class EventHelper {
 	}
 
 	public interface ApplyAble {
-		ActionResult apply(ServerWorld world, BlockPos pos, LivingEntity trigger);
+		EventResult apply(ServerWorld world, BlockPos pos, LivingEntity trigger);
 	}
 
 	public static <T> boolean shouldApply(
@@ -60,8 +60,8 @@ public class EventHelper {
 			var result = generaliser.apply(invokers.get(event)).apply(
 					(ServerWorld) entity.getWorld(), entity.getBlockPos(), igniter
 			);
-			if (result != ActionResult.PASS) {
-				return result.isAccepted();
+			if (result != EventResult.PASS) {
+				return result == EventResult.ALLOW;
 			}
 		}
 		return original;
@@ -76,8 +76,8 @@ public class EventHelper {
 			var result = onApply.apply(invokers.get(event)).apply(
 					(ServerWorld) world, pos, igniter
 			);
-			if (result != ActionResult.PASS) {
-				return result.isAccepted();
+			if (result != EventResult.PASS) {
+				return result == EventResult.ALLOW;
 			}
 		}
 		return original;
@@ -89,8 +89,8 @@ public class EventHelper {
 		if (wither.getWorld().isClient()) return original;
 		try (var invokers = Stimuli.select().forEntity(projectile != null ? projectile : wither)) {
 			var result = invokers.get(WitherGriefEvent.EVENT).grief(wither, projectile);
-			if (result != ActionResult.PASS) {
-				return result.isAccepted();
+			if (result != EventResult.PASS) {
+				return result == EventResult.ALLOW;
 			}
 		}
 		return original;

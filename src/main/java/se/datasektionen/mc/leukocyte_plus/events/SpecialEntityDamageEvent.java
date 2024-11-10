@@ -2,7 +2,7 @@ package se.datasektionen.mc.leukocyte_plus.events;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.util.ActionResult;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
 public interface SpecialEntityDamageEvent {
@@ -11,16 +11,16 @@ public interface SpecialEntityDamageEvent {
 		try {
 			for (var listener : ctx.getListeners()) {
 				var result = listener.onDamage(entity, source, amount);
-				if (result != ActionResult.PASS) {
+				if (result != EventResult.PASS) {
 					return result;
 				}
 			}
 		} catch (Throwable t) {
 			ctx.handleException(t);
 		}
-		return ActionResult.PASS;
+		return EventResult.PASS;
 	});
 
-	ActionResult onDamage(Entity entity, DamageSource source, float amount);
+	EventResult onDamage(Entity entity, DamageSource source, float amount);
 
 }

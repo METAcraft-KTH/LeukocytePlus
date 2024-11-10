@@ -1,10 +1,8 @@
 package se.datasektionen.mc.leukocyte_plus.events;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
@@ -18,17 +16,17 @@ public interface ItemUseOnBlockEvent {
 			try {
 				for (var listener : ctx.getListeners()) {
 					var result = listener.interact(player, hand, pos);
-					if (result.getResult() != ActionResult.PASS) {
+					if (result != ActionResult.PASS) {
 						return result;
 					}
 				}
 			} catch (Throwable t) {
 				ctx.handleException(t);
 			}
-			return TypedActionResult.pass(ItemStack.EMPTY);
+			return ActionResult.PASS;
 		});
 	}
 
-	TypedActionResult<ItemStack> interact(ServerPlayerEntity player, Hand hand, BlockPos pos);
+	ActionResult interact(ServerPlayerEntity player, Hand hand, BlockPos pos);
 
 }

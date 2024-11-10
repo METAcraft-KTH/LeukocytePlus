@@ -2,13 +2,13 @@ package se.datasektionen.mc.leukocyte_plus.mixin;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.util.ActionResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import se.datasektionen.mc.leukocyte_plus.events.TamedWolfAggroEvent;
 import xyz.nucleoid.stimuli.Stimuli;
+import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(WolfEntity.class)
 public class MixinWolfEntity {
@@ -18,9 +18,9 @@ public class MixinWolfEntity {
 		var wolf = (WolfEntity) (Object) this;
 		try (var invokers = Stimuli.select().forEntity(wolf)) {
 			var result = invokers.get(TamedWolfAggroEvent.EVENT).shouldAggro(wolf, target, owner);
-			if (result.isAccepted()) {
+			if (result == EventResult.ALLOW) {
 				cir.setReturnValue(true);
-			} else if (result != ActionResult.PASS) {
+			} else if (result == EventResult.DENY) {
 				cir.setReturnValue(false);
 			}
 		}

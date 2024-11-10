@@ -2,7 +2,7 @@ package se.datasektionen.mc.leukocyte_plus.events;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.util.ActionResult;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
 public interface TamedWolfAggroEvent {
@@ -11,16 +11,16 @@ public interface TamedWolfAggroEvent {
 		try {
 			for (var listener : ctx.getListeners()) {
 				var result = listener.shouldAggro(wolf, target, owner);
-				if (result != ActionResult.PASS) {
+				if (result != EventResult.PASS) {
 					return result;
 				}
 			}
 		} catch (Throwable t) {
 			ctx.handleException(t);
 		}
-		return ActionResult.PASS;
+		return EventResult.PASS;
 	});
 
-	ActionResult shouldAggro(WolfEntity wolf, LivingEntity target, LivingEntity owner);
+	EventResult shouldAggro(WolfEntity wolf, LivingEntity target, LivingEntity owner);
 
 }

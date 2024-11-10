@@ -12,7 +12,6 @@
 		"MixinBlockAttachedEntity",
 		"MixinCreeperEntity",
 		"MixinEndCrystalEntity",
-		"MixinEntity",
 		"MixinFireballEntity",
 		"MixinItemFrameEntity",
 		"MixinLightningEntity",

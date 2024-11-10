@@ -6,7 +6,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.util.ActionResult;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +16,7 @@ import se.datasektionen.mc.leukocyte_plus.EventHelper;
 import se.datasektionen.mc.leukocyte_plus.events.ExplosionEvents;
 import se.datasektionen.mc.leukocyte_plus.events.SpecialEntityDamageEvent;
 import xyz.nucleoid.stimuli.Stimuli;
+import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(EndCrystalEntity.class)
 public abstract class MixinEndCrystalEntity extends Entity {
@@ -30,7 +31,7 @@ public abstract class MixinEndCrystalEntity extends Entity {
 					target = "Lnet/minecraft/world/World$ExplosionSourceType;BLOCK:Lnet/minecraft/world/World$ExplosionSourceType;"
 			)
 	)
-	public World.ExplosionSourceType replaceSourceType(World.ExplosionSourceType original, DamageSource source) {
+	public World.ExplosionSourceType replaceSourceType(World.ExplosionSourceType original, ServerWorld world, DamageSource source) {
 		return EventHelper.getSourceType(
 				original, ExplosionEvents.END_CRYSTAL, this,
 				source.getAttacker() instanceof LivingEntity living ? living : null
@@ -38,10 +39,10 @@ public abstract class MixinEndCrystalEntity extends Entity {
 	}
 
 	@Inject(method = "damage", at = @At("HEAD"), cancellable = true)
-	public void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+	public void onDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 		try (var invokers = Stimuli.select().forEntity(this)) {
 			var result = invokers.get(SpecialEntityDamageEvent.EVENT).onDamage(this, source, amount);
-			if (result == ActionResult.FAIL) {
+			if (result == EventResult.DENY) {
 				cir.setReturnValue(false);
 			}
 		}

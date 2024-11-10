@@ -1,8 +1,8 @@
 package se.datasektionen.mc.leukocyte_plus.events;
 
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.util.ActionResult;
 import net.minecraft.world.World;
+import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
 public interface ProjectileBreaksBlocks {
@@ -11,16 +11,16 @@ public interface ProjectileBreaksBlocks {
 		try {
 			for (var listener : ctx.getListeners()) {
 				var result = listener.shouldBreakBlock(projectile, world);
-				if (result != ActionResult.PASS) {
+				if (result != EventResult.PASS) {
 					return result;
 				}
 			}
 		} catch (Throwable t) {
 			ctx.handleException(t);
 		}
-		return ActionResult.PASS;
+		return EventResult.PASS;
 	});
 
-	ActionResult shouldBreakBlock(ProjectileEntity projectile, World world);
+	EventResult shouldBreakBlock(ProjectileEntity projectile, World world);
 
 }
