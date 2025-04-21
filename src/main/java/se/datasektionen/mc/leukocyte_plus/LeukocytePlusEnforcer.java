@@ -459,9 +459,9 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	protected void syncHandStack(ServerPlayerEntity player, Hand hand) {
 		//Synchronise the given hand with the client, since the client will assume the event was not cancelled and use up the item.
 		if (hand.equals(Hand.MAIN_HAND)) {
-			syncInventorySlot(player, player.getInventory().selectedSlot);
+			syncInventorySlot(player, player.getInventory().getSelectedSlot());
 		} else {
-			syncInventorySlot(player, player.getInventory().main.size() + player.getInventory().armor.size());
+			syncInventorySlot(player, 40); //TODO Don't hardcode this (maybe merge into METAmods?)
 		}
 	}
 }

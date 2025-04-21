@@ -23,7 +23,7 @@ public abstract class MixinTntEntity extends Entity {
 
 	@Shadow @Nullable private LivingEntity causingEntity;
 
-	@Shadow @Final private static int DEFAULT_FUSE;
+	@Shadow @Final private static short DEFAULT_FUSE;
 	@Unique
 	private int timeSinceFuseIgnited = 0;
 
@@ -64,9 +64,7 @@ public abstract class MixinTntEntity extends Entity {
 
 	@Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
 	public void readNBT(NbtCompound nbt, CallbackInfo ci) {
-		if (nbt.contains(TIME_SINCE_FUSE_IGNITED)) {
-			timeSinceFuseIgnited = nbt.getInt(TIME_SINCE_FUSE_IGNITED);
-		}
+		timeSinceFuseIgnited = nbt.getInt(TIME_SINCE_FUSE_IGNITED, 0);
 	}
 
 

@@ -60,9 +60,7 @@ public abstract class MixinTntMinecartEntity extends AbstractMinecartEntity {
 
 	@Inject(method = "readCustomDataFromNbt", at = @At("HEAD"))
 	public void readNBT(NbtCompound nbt, CallbackInfo ci) {
-		if (nbt.contains(TIME_SINCE_FUSE_IGNITED)) {
-			timeSinceFuseIgnited = nbt.getInt(TIME_SINCE_FUSE_IGNITED);
-		}
+		timeSinceFuseIgnited = nbt.getInt(TIME_SINCE_FUSE_IGNITED, 0);
 	}
 
 }
