@@ -341,7 +341,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected void restoreEntityForClient(Entity entity, ServerPlayerEntity player) {
-		restoreEntityForClients(entity, player.getServerWorld(), Stream.of(player));
+		restoreEntityForClients(entity, player.getWorld(), Stream.of(player));
 	}
 
 	protected EventResult fixProjectile(ProjectileEntity projectile, EventResult rule) {
