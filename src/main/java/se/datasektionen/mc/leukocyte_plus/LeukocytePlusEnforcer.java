@@ -228,7 +228,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				var stack = player.getStackInHand(hand);
 				if (stack.getItem() instanceof AccessorBucketItem bucket && bucket.getFluid().matchesType(Fluids.WATER)) {
 					if (stack.getItem() instanceof EntityBucketItem) {
-						return !player.getWorld().getBlockState(pos).isOf(Blocks.WATER);
+						return !player.getEntityWorld().getBlockState(pos).isOf(Blocks.WATER);
 					}
 					return true;
 				}
@@ -311,7 +311,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected void restoreEntityForClients(Entity entity) {
-		if (entity.getWorld() instanceof ServerWorld world) {
+		if (entity.getEntityWorld() instanceof ServerWorld world) {
 			var tracker = ((AccessorServerChunkLoadingManager) world.getChunkManager().chunkLoadingManager).getEntityTrackers().get(
 					entity.getId()
 			);
@@ -341,7 +341,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected void restoreEntityForClient(Entity entity, ServerPlayerEntity player) {
-		restoreEntityForClients(entity, player.getWorld(), Stream.of(player));
+		restoreEntityForClients(entity, player.getEntityWorld(), Stream.of(player));
 	}
 
 	protected EventResult fixProjectile(ProjectileEntity projectile, EventResult rule) {
@@ -356,9 +356,9 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 			if (predicate.test(entity, source)) {
 				if (source.getAttacker() instanceof ServerPlayerEntity player) {
 					//Allow admins to break the entity.
-					var authorities = Leukocyte.get(player.getServer()).getAuthorities();
+					var authorities = Leukocyte.get(player.getEntityWorld().getServer()).getAuthorities();
 					if (authorities instanceof IndexedAuthorityMap auth) {
-						for (var authority : auth.select(player.getWorld().getRegistryKey(), SpecialEntityDamageEvent.EVENT)) {
+						for (var authority : auth.select(player.getEntityWorld().getRegistryKey(), SpecialEntityDamageEvent.EVENT)) {
 							if (authority.getEventFilter().accepts(EventSource.forEntity(player))) {
 								return rule;
 							}
@@ -389,12 +389,12 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		return preventUse((player, hand, pos) -> {
 			var handStack = player.getStackInHand(hand);
 			if (handStack.isOf(Items.BUCKET) && rule == EventResult.DENY) {
-				var result = AccessorItem.callRaycast(player.getWorld(), player, RaycastContext.FluidHandling.SOURCE_ONLY);
+				var result = AccessorItem.callRaycast(player.getEntityWorld(), player, RaycastContext.FluidHandling.SOURCE_ONLY);
 				if (
 						result.getType() != HitResult.Type.MISS &&
 						(
-								player.getWorld().getBlockState(result.getBlockPos()).isOf(fluid) ||
-										player.getWorld().getBlockState(result.getBlockPos()).isOf(cauldron)
+								player.getEntityWorld().getBlockState(result.getBlockPos()).isOf(fluid) ||
+										player.getEntityWorld().getBlockState(result.getBlockPos()).isOf(cauldron)
 						)
 				) {
 					if (handStack.getCount() > 1) {

@@ -55,10 +55,10 @@ public class EventHelper {
 			boolean original, StimulusEvent<? extends T> event, Function<T, ApplyAble> generaliser,
 			Entity entity, @Nullable LivingEntity igniter
 	) {
-		if (entity.getWorld().isClient()) return original;
+		if (entity.getEntityWorld().isClient()) return original;
 		try (var invokers = Stimuli.select().forEntity(entity)) {
 			var result = generaliser.apply(invokers.get(event)).apply(
-					(ServerWorld) entity.getWorld(), entity.getBlockPos(), igniter
+					(ServerWorld) entity.getEntityWorld(), entity.getBlockPos(), igniter
 			);
 			if (result != EventResult.PASS) {
 				return result == EventResult.ALLOW;
@@ -86,7 +86,7 @@ public class EventHelper {
 	public static boolean shouldWitherGrief(
 			boolean original, WitherEntity wither, @Nullable WitherSkullEntity projectile
 	) {
-		if (wither.getWorld().isClient()) return original;
+		if (wither.getEntityWorld().isClient()) return original;
 		try (var invokers = Stimuli.select().forEntity(projectile != null ? projectile : wither)) {
 			var result = invokers.get(WitherGriefEvent.EVENT).grief(wither, projectile);
 			if (result != EventResult.PASS) {
