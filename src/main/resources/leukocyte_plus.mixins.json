@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "se.datasektionen.mc.leukocyte_plus.mixin",
+	"package": "nu.metacraft.leukocyte_plus.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"AccessorBucketItem",

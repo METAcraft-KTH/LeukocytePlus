@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"se.datasektionen.mc.leukocyte_plus.LeukocytePlus"
+			"nu.metacraft.leukocyte_plus.LeukocytePlus"
 		]
 	},
 	"mixins": [
