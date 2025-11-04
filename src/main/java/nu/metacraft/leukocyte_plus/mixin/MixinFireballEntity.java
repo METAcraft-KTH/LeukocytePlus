@@ -1,11 +1,11 @@
 package nu.metacraft.leukocyte_plus.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.AbstractFireballEntity;
-import net.minecraft.entity.projectile.FireballEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Fireball;
+import net.minecraft.world.entity.projectile.LargeFireball;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -13,21 +13,21 @@ import nu.metacraft.leukocyte_plus.EventHelper;
 import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 import nu.metacraft.leukocyte_plus.events.FireEvents;
 
-@Mixin(FireballEntity.class)
-public abstract class MixinFireballEntity extends AbstractFireballEntity {
+@Mixin(LargeFireball.class)
+public abstract class MixinFireballEntity extends Fireball {
 
-	public MixinFireballEntity(EntityType<? extends AbstractFireballEntity> entityType, World world) {
+	public MixinFireballEntity(EntityType<? extends Fireball> entityType, Level world) {
 		super(entityType, world);
 	}
 
 	@ModifyExpressionValue(
-			method = "onCollision",
+			method = "onHit",
 			at = @At(
 					value = "FIELD",
-					target = "Lnet/minecraft/world/World$ExplosionSourceType;MOB:Lnet/minecraft/world/World$ExplosionSourceType;"
+					target = "Lnet/minecraft/world/level/Level$ExplosionInteraction;MOB:Lnet/minecraft/world/level/Level$ExplosionInteraction;"
 			)
 	)
-	public World.ExplosionSourceType replaceSourceType(World.ExplosionSourceType original) {
+	public Level.ExplosionInteraction replaceSourceType(Level.ExplosionInteraction original) {
 		return EventHelper.getSourceType(
 				original, ExplosionEvents.FIREBALL, this,
 				this.getOwner() instanceof LivingEntity living ? living : null
@@ -35,10 +35,10 @@ public abstract class MixinFireballEntity extends AbstractFireballEntity {
 	}
 
 	@ModifyArg(
-		method = "onCollision",
+		method = "onHit",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/World$ExplosionSourceType;)V"
+			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;DDDFZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		),
 		index = 5
 	)

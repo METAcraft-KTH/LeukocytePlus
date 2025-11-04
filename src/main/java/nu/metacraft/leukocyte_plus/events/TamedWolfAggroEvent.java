@@ -1,7 +1,7 @@
 package nu.metacraft.leukocyte_plus.events;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.WolfEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
@@ -21,6 +21,6 @@ public interface TamedWolfAggroEvent {
 		return EventResult.PASS;
 	});
 
-	EventResult shouldAggro(WolfEntity wolf, LivingEntity target, LivingEntity owner);
+	EventResult shouldAggro(Wolf wolf, LivingEntity target, LivingEntity owner);
 
 }

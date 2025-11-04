@@ -1,14 +1,14 @@
 package nu.metacraft.leukocyte_plus.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.vehicle.AbstractMinecartEntity;
-import net.minecraft.entity.vehicle.TntMinecartEntity;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.world.World;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.world.entity.vehicle.MinecartTNT;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,15 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import nu.metacraft.leukocyte_plus.EventHelper;
 import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 
-@Mixin(TntMinecartEntity.class)
-public abstract class MixinTntMinecartEntity extends AbstractMinecartEntity {
+@Mixin(MinecartTNT.class)
+public abstract class MixinTntMinecartEntity extends AbstractMinecart {
 
 	@Shadow public abstract boolean isPrimed();
 
-	@Shadow @Nullable private DamageSource damageSource;
+	@Shadow @Nullable private DamageSource ignitionSource;
 	@Unique
 	private int timeSinceFuseIgnited = 0;
-	protected MixinTntMinecartEntity(EntityType<?> entityType, World world) {
+	protected MixinTntMinecartEntity(EntityType<?> entityType, Level world) {
 		super(entityType, world);
 	}
 
@@ -42,30 +42,30 @@ public abstract class MixinTntMinecartEntity extends AbstractMinecartEntity {
 	}
 
 	@ModifyExpressionValue(
-		method = "explode(Lnet/minecraft/entity/damage/DamageSource;D)V",
+		method = "explode(Lnet/minecraft/world/damagesource/DamageSource;D)V",
 		at = @At(
 			value = "FIELD",
-			target = "Lnet/minecraft/world/World$ExplosionSourceType;TNT:Lnet/minecraft/world/World$ExplosionSourceType;"
+			target = "Lnet/minecraft/world/level/Level$ExplosionInteraction;TNT:Lnet/minecraft/world/level/Level$ExplosionInteraction;"
 		)
 	)
-	public World.ExplosionSourceType replaceSourceType(World.ExplosionSourceType original) {
+	public Level.ExplosionInteraction replaceSourceType(Level.ExplosionInteraction original) {
 		return EventHelper.getSourceType(
 				original, timeSinceFuseIgnited >= 80 ? ExplosionEvents.TNT_MINECART_FUSE : ExplosionEvents.TNT_MINECART_INSTANT,
-				this, damageSource != null && damageSource.getAttacker() instanceof LivingEntity igniter ? igniter : null
+				this, ignitionSource != null && ignitionSource.getEntity() instanceof LivingEntity igniter ? igniter : null
 		);
 	}
 
 	@Unique
 	private static final String TIME_SINCE_FUSE_IGNITED = "TimeSinceFuseIgnited";
 
-	@Inject(method = "writeCustomData", at = @At("HEAD"))
-	public void writeNBT(WriteView nbt, CallbackInfo ci) {
+	@Inject(method = "addAdditionalSaveData", at = @At("HEAD"))
+	public void writeNBT(ValueOutput nbt, CallbackInfo ci) {
 		nbt.putInt(TIME_SINCE_FUSE_IGNITED, timeSinceFuseIgnited);
 	}
 
-	@Inject(method = "readCustomData", at = @At("HEAD"))
-	public void readNBT(ReadView nbt, CallbackInfo ci) {
-		timeSinceFuseIgnited = nbt.getInt(TIME_SINCE_FUSE_IGNITED, 0);
+	@Inject(method = "readAdditionalSaveData", at = @At("HEAD"))
+	public void readNBT(ValueInput nbt, CallbackInfo ci) {
+		timeSinceFuseIgnited = nbt.getIntOr(TIME_SINCE_FUSE_IGNITED, 0);
 	}
 
 }

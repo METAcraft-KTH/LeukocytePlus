@@ -1,14 +1,14 @@
 package nu.metacraft.leukocyte_plus.mixin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.decoration.BlockAttachedEntity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.BlockAttachedEntity;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import nu.metacraft.leukocyte_plus.events.SpecialEntityDamageEvent;
 import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
@@ -16,9 +16,9 @@ import xyz.nucleoid.stimuli.event.EventResult;
 @Mixin(BlockAttachedEntity.class)
 public class MixinBlockAttachedEntity {
 
-	@Inject(method = "damage", at = @At("HEAD"), cancellable = true)
-	public void onDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-		if ((Object) this instanceof ItemFrameEntity) {
+	@Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+	public void onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+		if ((Object) this instanceof ItemFrame) {
 			return;
 		}
 		var entity = (Entity) (Object) this;

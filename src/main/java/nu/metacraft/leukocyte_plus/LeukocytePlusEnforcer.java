@@ -1,28 +1,32 @@
 package nu.metacraft.leukocyte_plus;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Bucketable;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.entity.decoration.EndCrystalEntity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.entity.decoration.painting.PaintingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.item.*;
-import net.minecraft.server.network.PlayerAssociatedNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerChunkLoadingManager;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ChunkMap;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerPlayerConnection;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Bucketable;
+import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.entity.decoration.Painting;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemFrameItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MobBucketItem;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.HitResult;
 import nu.metacraft.leukocyte_plus.events.*;
 import nu.metacraft.leukocyte_plus.mixin.AccessorBucketItem;
 import nu.metacraft.leukocyte_plus.mixin.AccessorItem;
@@ -151,7 +155,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_EDIT)
 		)).applySimple(EntityUseEvent.EVENT, rule -> {
 			return (player, entity, hand, hitResult) -> {
-				if (entity instanceof ArmorStandEntity) {
+				if (entity instanceof ArmorStand) {
 					return rule == EventResult.ALLOW ? EventResult.PASS : rule;
 				}
 				return EventResult.PASS;
@@ -161,7 +165,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.ARMOUR_STAND_BREAK).orElse(
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_BREAK)
 		)).applySimple(SpecialEntityDamageEvent.EVENT, rule -> {
-			return preventBreaking(ArmorStandEntity.class, rule);
+			return preventBreaking(ArmorStand.class, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.ITEM_FRAME_PLACE).orElse(
@@ -174,7 +178,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_EDIT)
 		)).applySimple(EntityUseEvent.EVENT, rule -> {
 			return (player, entity, hand, hitResult) -> {
-				if (entity instanceof ItemFrameEntity) {
+				if (entity instanceof ItemFrame) {
 					return rule == EventResult.ALLOW ? EventResult.PASS : rule;
 				}
 				return EventResult.PASS;
@@ -185,7 +189,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_EDIT)
 		)).applySimple(SpecialEntityDamageEvent.EVENT, rule -> {
 			return preventBreaking((entity, source) -> {
-				return entity instanceof ItemFrameEntity frame && !frame.getHeldItemStack().isEmpty() && source.getSource() instanceof ServerPlayerEntity;
+				return entity instanceof ItemFrame frame && !frame.getItem().isEmpty() && source.getDirectEntity() instanceof ServerPlayer;
 			}, rule);
 		});
 
@@ -193,7 +197,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_BREAK)
 		)).applySimple(SpecialEntityDamageEvent.EVENT, rule -> {
 			return preventBreaking((entity, source) -> {
-				return entity instanceof ItemFrameEntity frame && (frame.getHeldItemStack().isEmpty() || !(source.getSource() instanceof ServerPlayerEntity));
+				return entity instanceof ItemFrame frame && (frame.getItem().isEmpty() || !(source.getDirectEntity() instanceof ServerPlayer));
 			}, rule);
 		});
 
@@ -206,7 +210,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.PAINTING_BREAK).orElse(
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_BREAK)
 		)).applySimple(SpecialEntityDamageEvent.EVENT, rule -> {
-			return preventBreaking(PaintingEntity.class, rule);
+			return preventBreaking(Painting.class, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.END_CRYSTAL_PLACE).orElse(
@@ -218,17 +222,17 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.END_CRYSTAL_BREAK).orElse(
 				ruleMap.test(LeukocytePlusRules.ENTITY_BLOCK_BREAK)
 		)).applySimple(SpecialEntityDamageEvent.EVENT, rule -> {
-			return preventBreaking(EndCrystalEntity.class, rule);
+			return preventBreaking(EndCrystal.class, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.WATER_PLACE).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PLACE)
 		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
 			return preventUse((player, hand, pos) -> {
-				var stack = player.getStackInHand(hand);
-				if (stack.getItem() instanceof AccessorBucketItem bucket && bucket.getFluid().matchesType(Fluids.WATER)) {
-					if (stack.getItem() instanceof EntityBucketItem) {
-						return !player.getEntityWorld().getBlockState(pos).isOf(Blocks.WATER);
+				var stack = player.getItemInHand(hand);
+				if (stack.getItem() instanceof AccessorBucketItem bucket && bucket.getContent().isSame(Fluids.WATER)) {
+					if (stack.getItem() instanceof MobBucketItem) {
+						return !player.level().getBlockState(pos).is(Blocks.WATER);
 					}
 					return true;
 				}
@@ -251,14 +255,14 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.LAVA_PLACE).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PLACE)
 		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
-			return preventUse(stack -> stack.getItem() instanceof AccessorBucketItem bucket && bucket.getFluid().matchesType(Fluids.LAVA), rule);
+			return preventUse(stack -> stack.getItem() instanceof AccessorBucketItem bucket && bucket.getContent().isSame(Fluids.LAVA), rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.PICKUP_FISH)).applySimple(EntityUseEvent.EVENT, rule -> {
 			return (player, entity, hand, hitResult) -> {
 				if (
 						entity instanceof Bucketable &&
-						player.getStackInHand(hand).getItem() == Items.WATER_BUCKET &&
+						player.getItemInHand(hand).getItem() == Items.WATER_BUCKET &&
 						entity.isAlive()
 				) {
 					if (rule == EventResult.DENY) {
@@ -273,11 +277,11 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.PLACE_FISH)).applySimple(ItemUseOnBlockEvent.INCLUDE_FLUIDS, rule -> {
-			return preventUse(stack -> stack.getItem() instanceof EntityBucketItem, rule);
+			return preventUse(stack -> stack.getItem() instanceof MobBucketItem, rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.PLACE_FIRE)).applySimple(BlockUseEvent.EVENT, rule -> {
-			return preventPlace(stack -> stack.isOf(Items.FLINT_AND_STEEL) || stack.isOf(Items.FIRE_CHARGE), rule);
+			return preventPlace(stack -> stack.is(Items.FLINT_AND_STEEL) || stack.is(Items.FIRE_CHARGE), rule);
 		});
 
 		this.forRule(
@@ -295,7 +299,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
 
 		this.forRule(events, ruleMap.test(ProtectionRule.PVP)).applySimple(TamedWolfAggroEvent.EVENT, rule -> {
-			return (wolf, owner, target) -> target instanceof PlayerEntity ? rule : EventResult.PASS;
+			return (wolf, owner, target) -> target instanceof Player ? rule : EventResult.PASS;
 		});
 		this.forRule(events, ruleMap.test(ProtectionRule.ATTACK)).applySimple(TamedWolfAggroEvent.EVENT, rule -> {
 			return (wolf, owner, target) -> rule;
@@ -303,7 +307,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
 
 		this.forRule(events, ruleMap.test(ProtectionRule.PVP)).applySimple(ProjectileHitEvent.ENTITY, rule -> {
-			return (projectile, result) -> fixProjectile(projectile, result.getEntity() instanceof PlayerEntity ? rule : EventResult.PASS);
+			return (projectile, result) -> fixProjectile(projectile, result.getEntity() instanceof Player ? rule : EventResult.PASS);
 		});
 		this.forRule(events, ruleMap.test(ProtectionRule.ATTACK)).applySimple(ProjectileHitEvent.ENTITY, rule -> {
 			return (projectile, result) -> fixProjectile(projectile, rule);
@@ -311,14 +315,14 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected void restoreEntityForClients(Entity entity) {
-		if (entity.getEntityWorld() instanceof ServerWorld world) {
-			var tracker = ((AccessorServerChunkLoadingManager) world.getChunkManager().chunkLoadingManager).getEntityTrackers().get(
+		if (entity.level() instanceof ServerLevel world) {
+			var tracker = ((AccessorServerChunkLoadingManager) world.getChunkSource().chunkMap).getEntityMap().get(
 					entity.getId()
 			);
 			restoreEntityForClients(
 					entity,
-					((AccessorServerChunkLoadingManager.EntityTracker) tracker).getListeners().stream().map(
-							PlayerAssociatedNetworkHandler::getPlayer
+					((AccessorServerChunkLoadingManager.EntityTracker) tracker).getSeenBy().stream().map(
+							ServerPlayerConnection::getPlayer
 					),
 					tracker
 			);
@@ -326,26 +330,26 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected void restoreEntityForClients(
-			Entity entity, Stream<ServerPlayerEntity> players,
-			ServerChunkLoadingManager.EntityTracker tracker
+			Entity entity, Stream<ServerPlayer> players,
+			ChunkMap.TrackedEntity tracker
 	) {
-		var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getEntry();
-		players.forEach(player -> player.networkHandler.sendPacket(entity.createSpawnPacket(entry)));
+		var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getServerEntity();
+		players.forEach(player -> player.connection.send(entity.getAddEntityPacket(entry)));
 	}
 
-	protected void restoreEntityForClients(Entity entity, ServerWorld world, Stream<ServerPlayerEntity> players) {
-		var tracker = ((AccessorServerChunkLoadingManager) world.getChunkManager().chunkLoadingManager).getEntityTrackers().get(
+	protected void restoreEntityForClients(Entity entity, ServerLevel world, Stream<ServerPlayer> players) {
+		var tracker = ((AccessorServerChunkLoadingManager) world.getChunkSource().chunkMap).getEntityMap().get(
 				entity.getId()
 		);
 		restoreEntityForClients(entity, players, tracker);
 	}
 
-	protected void restoreEntityForClient(Entity entity, ServerPlayerEntity player) {
-		restoreEntityForClients(entity, player.getEntityWorld(), Stream.of(player));
+	protected void restoreEntityForClient(Entity entity, ServerPlayer player) {
+		restoreEntityForClients(entity, player.level(), Stream.of(player));
 	}
 
-	protected EventResult fixProjectile(ProjectileEntity projectile, EventResult rule) {
-		if (rule == EventResult.DENY && projectile instanceof PersistentProjectileEntity) {
+	protected EventResult fixProjectile(Projectile projectile, EventResult rule) {
+		if (rule == EventResult.DENY && projectile instanceof AbstractArrow) {
 			restoreEntityForClients(projectile);
 		}
 		return rule;
@@ -354,11 +358,11 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	protected SpecialEntityDamageEvent preventBreaking(BiPredicate<Entity, DamageSource> predicate, EventResult rule) {
 		return (entity, source, amount) -> {
 			if (predicate.test(entity, source)) {
-				if (source.getAttacker() instanceof ServerPlayerEntity player) {
+				if (source.getEntity() instanceof ServerPlayer player) {
 					//Allow admins to break the entity.
-					var authorities = Leukocyte.get(player.getEntityWorld().getServer()).getAuthorities();
+					var authorities = Leukocyte.get(player.level().getServer()).getAuthorities();
 					if (authorities instanceof IndexedAuthorityMap auth) {
-						for (var authority : auth.select(player.getEntityWorld().getRegistryKey(), SpecialEntityDamageEvent.EVENT)) {
+						for (var authority : auth.select(player.level().dimension(), SpecialEntityDamageEvent.EVENT)) {
 							if (authority.getEventFilter().accepts(EventSource.forEntity(player))) {
 								return rule;
 							}
@@ -382,24 +386,24 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 	}
 
 	protected ItemUseOnBlockEvent preventUse(Item item, EventResult rule) {
-		return preventUse(stack -> stack.isOf(item), rule);
+		return preventUse(stack -> stack.is(item), rule);
 	}
 
 	protected ItemUseOnBlockEvent preventFluidPickup(Block fluid, Block cauldron, EventResult rule) {
 		return preventUse((player, hand, pos) -> {
-			var handStack = player.getStackInHand(hand);
-			if (handStack.isOf(Items.BUCKET) && rule == EventResult.DENY) {
-				var result = AccessorItem.callRaycast(player.getEntityWorld(), player, RaycastContext.FluidHandling.SOURCE_ONLY);
+			var handStack = player.getItemInHand(hand);
+			if (handStack.is(Items.BUCKET) && rule == EventResult.DENY) {
+				var result = AccessorItem.callGetPlayerPOVHitResult(player.level(), player, ClipContext.Fluid.SOURCE_ONLY);
 				if (
 						result.getType() != HitResult.Type.MISS &&
 						(
-								player.getEntityWorld().getBlockState(result.getBlockPos()).isOf(fluid) ||
-										player.getEntityWorld().getBlockState(result.getBlockPos()).isOf(cauldron)
+								player.level().getBlockState(result.getBlockPos()).is(fluid) ||
+										player.level().getBlockState(result.getBlockPos()).is(cauldron)
 						)
 				) {
 					if (handStack.getCount() > 1) {
 						//Synchronise the slot where the bucket would be placed.
-						syncInventorySlot(player, player.getInventory().getEmptySlot());
+						syncInventorySlot(player, player.getInventory().getFreeSlot());
 					} else {
 						syncHandStack(player, hand);
 					}
@@ -417,16 +421,16 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				syncHandStack(player, hand);
 				return rule.asActionResult();
 			}
-			return ActionResult.PASS;
+			return InteractionResult.PASS;
 		};
 	}
 
 	public interface PlayerHandPredicate {
-		boolean test(ServerPlayerEntity player, Hand hand, BlockPos pos);
+		boolean test(ServerPlayer player, InteractionHand hand, BlockPos pos);
 	}
 
 	protected ItemUseOnBlockEvent preventUse(Predicate<ItemStack> checker, EventResult rule) {
-		return preventUse((player, hand, pos) -> checker.test(player.getStackInHand(hand)), rule);
+		return preventUse((player, hand, pos) -> checker.test(player.getItemInHand(hand)), rule);
 	}
 
 	protected BlockUseEvent preventPlace(PlayerHandPredicate checker, EventResult rule) {
@@ -435,30 +439,30 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 				if (rule == EventResult.DENY) {
 					syncHandStack(player, hand);
 				}
-				return rule == EventResult.ALLOW ? ActionResult.PASS : rule.asActionResult();
+				return rule == EventResult.ALLOW ? InteractionResult.PASS : rule.asActionResult();
 			} else {
-				return ActionResult.PASS;
+				return InteractionResult.PASS;
 			}
 		};
 	}
 
 	protected BlockUseEvent preventPlace(Predicate<ItemStack> checker, EventResult rule) {
-		return preventPlace((player, hand, pos) -> checker.test(player.getStackInHand(hand)), rule);
+		return preventPlace((player, hand, pos) -> checker.test(player.getItemInHand(hand)), rule);
 	}
 
 	protected BlockUseEvent preventPlace(Item item, EventResult rule) {
-		return preventPlace(stack -> stack.isOf(item), rule);
+		return preventPlace(stack -> stack.is(item), rule);
 	}
 
-	protected void syncInventorySlot(ServerPlayerEntity player, int slot) {
-		player.networkHandler.sendPacket(
-				player.getInventory().createSlotSetPacket(slot)
+	protected void syncInventorySlot(ServerPlayer player, int slot) {
+		player.connection.send(
+				player.getInventory().createInventoryUpdatePacket(slot)
 		);
 	}
 
-	protected void syncHandStack(ServerPlayerEntity player, Hand hand) {
+	protected void syncHandStack(ServerPlayer player, InteractionHand hand) {
 		//Synchronise the given hand with the client, since the client will assume the event was not cancelled and use up the item.
-		if (hand.equals(Hand.MAIN_HAND)) {
+		if (hand.equals(InteractionHand.MAIN_HAND)) {
 			syncInventorySlot(player, player.getInventory().getSelectedSlot());
 		} else {
 			syncInventorySlot(player, 40); //TODO Don't hardcode this (maybe merge into METAmods?)

@@ -1,7 +1,7 @@
 package nu.metacraft.leukocyte_plus.events;
 
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.level.Level;
 import xyz.nucleoid.stimuli.event.EventResult;
 import xyz.nucleoid.stimuli.event.StimulusEvent;
 
@@ -21,6 +21,6 @@ public interface ProjectileBreaksBlocks {
 		return EventResult.PASS;
 	});
 
-	EventResult shouldBreakBlock(ProjectileEntity projectile, World world);
+	EventResult shouldBreakBlock(Projectile projectile, Level world);
 
 }

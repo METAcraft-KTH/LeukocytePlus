@@ -3,13 +3,13 @@ package nu.metacraft.leukocyte_plus.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,29 +23,29 @@ import nu.metacraft.leukocyte_plus.events.FireEvents;
 public class MixinBedBlock {
 
 	@ModifyExpressionValue(
-			method = "onUse",
+			method = "useWithoutItem",
 			at = @At(
 					value = "FIELD",
-					target = "Lnet/minecraft/world/World$ExplosionSourceType;BLOCK:Lnet/minecraft/world/World$ExplosionSourceType;"
+					target = "Lnet/minecraft/world/level/Level$ExplosionInteraction;BLOCK:Lnet/minecraft/world/level/Level$ExplosionInteraction;"
 			)
 	)
-	public World.ExplosionSourceType replaceSourceType(
-			World.ExplosionSourceType original, BlockState state, World world, BlockPos pos, PlayerEntity player
+	public Level.ExplosionInteraction replaceSourceType(
+			Level.ExplosionInteraction original, BlockState state, Level world, BlockPos pos, Player player
 	) {
 		return EventHelper.getSourceType(original, ExplosionEvents.BED, world, pos, player);
 	}
 
 	@Inject(
-		method = "onUse",
+		method = "useWithoutItem",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;Lnet/minecraft/world/explosion/ExplosionBehavior;Lnet/minecraft/util/math/Vec3d;FZLnet/minecraft/world/World$ExplosionSourceType;)V"
+			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		)
 	)
 	public void grabVarsForFireCheck(
-			BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit,
-			CallbackInfoReturnable<ActionResult> cir, @Share("world") LocalRef<World> worldVar,
-			@Share("pos") LocalRef<BlockPos> posVar, @Share("player") LocalRef<PlayerEntity> playerVar
+			BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit,
+			CallbackInfoReturnable<InteractionResult> cir, @Share("world") LocalRef<Level> worldVar,
+			@Share("pos") LocalRef<BlockPos> posVar, @Share("player") LocalRef<Player> playerVar
 	) {
 		worldVar.set(world);
 		posVar.set(pos);
@@ -53,16 +53,16 @@ public class MixinBedBlock {
 	}
 
 	@ModifyArg(
-		method = "onUse",
+		method = "useWithoutItem",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;Lnet/minecraft/world/explosion/ExplosionBehavior;Lnet/minecraft/util/math/Vec3d;FZLnet/minecraft/world/World$ExplosionSourceType;)V"
+			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		),
 		index = 5
 	)
 	public boolean setCreateFire(
-			boolean createFire, @Share("world") LocalRef<World> world,
-			@Share("pos") LocalRef<BlockPos> pos, @Share("player") LocalRef<PlayerEntity> player
+			boolean createFire, @Share("world") LocalRef<Level> world,
+			@Share("pos") LocalRef<BlockPos> pos, @Share("player") LocalRef<Player> player
 	) {
 		return EventHelper.shouldPlaceFire(createFire, FireEvents.BED, world.get(), pos.get(), player.get());
 	}

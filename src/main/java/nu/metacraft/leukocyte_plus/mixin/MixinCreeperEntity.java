@@ -1,30 +1,30 @@
 package nu.metacraft.leukocyte_plus.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.CreeperEntity;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import nu.metacraft.leukocyte_plus.EventHelper;
 import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 
-@Mixin(CreeperEntity.class)
-public abstract class MixinCreeperEntity extends HostileEntity {
+@Mixin(Creeper.class)
+public abstract class MixinCreeperEntity extends Monster {
 
-	protected MixinCreeperEntity(EntityType<? extends HostileEntity> entityType, World world) {
+	protected MixinCreeperEntity(EntityType<? extends Monster> entityType, Level world) {
 		super(entityType, world);
 	}
 
 	@ModifyExpressionValue(
-			method = "explode",
+			method = "explodeCreeper",
 			at = @At(
 					value = "FIELD",
-					target = "Lnet/minecraft/world/World$ExplosionSourceType;MOB:Lnet/minecraft/world/World$ExplosionSourceType;"
+					target = "Lnet/minecraft/world/level/Level$ExplosionInteraction;MOB:Lnet/minecraft/world/level/Level$ExplosionInteraction;"
 			)
 	)
-	public World.ExplosionSourceType replaceSourceType(World.ExplosionSourceType original) {
+	public Level.ExplosionInteraction replaceSourceType(Level.ExplosionInteraction original) {
 		return EventHelper.getSourceType(
 				original, ExplosionEvents.CREEPER, this, this
 		);

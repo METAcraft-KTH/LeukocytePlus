@@ -3,10 +3,10 @@ package nu.metacraft.leukocyte_plus.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.RespawnAnchorBlock;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RespawnAnchorBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -23,11 +23,11 @@ public class MixinRespawnAnchorBlock {
 			method = "explode",
 			at = @At(
 					value = "FIELD",
-					target = "Lnet/minecraft/world/World$ExplosionSourceType;BLOCK:Lnet/minecraft/world/World$ExplosionSourceType;"
+					target = "Lnet/minecraft/world/level/Level$ExplosionInteraction;BLOCK:Lnet/minecraft/world/level/Level$ExplosionInteraction;"
 			)
 	)
-	public World.ExplosionSourceType replaceSourceType(
-			World.ExplosionSourceType original, BlockState state, World world, final BlockPos explodedPos
+	public Level.ExplosionInteraction replaceSourceType(
+			Level.ExplosionInteraction original, BlockState state, Level world, final BlockPos explodedPos
 	) {
 		return EventHelper.getSourceType(original, ExplosionEvents.RESPAWN_ANCHOR, world, explodedPos, null);
 	}
@@ -36,12 +36,12 @@ public class MixinRespawnAnchorBlock {
 		method = "explode",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;Lnet/minecraft/world/explosion/ExplosionBehavior;Lnet/minecraft/util/math/Vec3d;FZLnet/minecraft/world/World$ExplosionSourceType;)V"
+			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		)
 	)
 	public void grabVarsForFireCheck(
-			BlockState state, World world, BlockPos explodedPos, CallbackInfo ci,
-			@Share("world") LocalRef<World> worldVar, @Share("pos") LocalRef<BlockPos> posVar
+			BlockState state, Level world, BlockPos explodedPos, CallbackInfo ci,
+			@Share("world") LocalRef<Level> worldVar, @Share("pos") LocalRef<BlockPos> posVar
 	) {
 		worldVar.set(world);
 		posVar.set(explodedPos);
@@ -51,12 +51,12 @@ public class MixinRespawnAnchorBlock {
 		method = "explode",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;Lnet/minecraft/world/explosion/ExplosionBehavior;Lnet/minecraft/util/math/Vec3d;FZLnet/minecraft/world/World$ExplosionSourceType;)V"
+			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		),
 		index = 5
 	)
 	public boolean setCreateFire(
-			boolean createFire, @Share("world") LocalRef<World> world,
+			boolean createFire, @Share("world") LocalRef<Level> world,
 			@Share("pos") LocalRef<BlockPos> pos
 	) {
 		return EventHelper.shouldPlaceFire(createFire, FireEvents.RESPAWN_ANCHOR, world.get(), pos.get(), null);
