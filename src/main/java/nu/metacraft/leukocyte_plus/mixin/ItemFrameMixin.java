@@ -7,13 +7,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import nu.metacraft.leukocyte_plus.events.SpecialEntityDamageEvent;
 import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
 
-@Mixin(ArmorStand.class)
-public class MixinArmorStandEntity {
+@Mixin(ItemFrame.class)
+public class ItemFrameMixin {
 
 	@Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
 	public void onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {

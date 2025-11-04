@@ -10,9 +10,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import nu.metacraft.leukocyte_plus.EventHelper;
 
 @Mixin(WitherBoss.class)
-public abstract class MixinWitherEntity extends Monster {
+public abstract class WitherBossMixin extends Monster {
 
-	protected MixinWitherEntity(EntityType<? extends Monster> entityType, Level world) {
+	protected WitherBossMixin(EntityType<? extends Monster> entityType, Level world) {
 		super(entityType, world);
 	}
 

@@ -15,9 +15,9 @@ import nu.metacraft.leukocyte_plus.EventHelper;
 import nu.metacraft.leukocyte_plus.events.FireEvents;
 
 @Mixin(LightningBolt.class)
-public abstract class MixinLightningEntity extends Entity {
+public abstract class LightningBoltMixin extends Entity {
 
-	public MixinLightningEntity(EntityType<?> type, Level world) {
+	public LightningBoltMixin(EntityType<?> type, Level world) {
 		super(type, world);
 	}
 

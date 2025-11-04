@@ -19,8 +19,8 @@ import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(EndCrystal.class)
-public abstract class MixinEndCrystalEntity extends Entity {
-	public MixinEndCrystalEntity(EntityType<?> type, Level world) {
+public abstract class EndCrystalMixin extends Entity {
+	public EndCrystalMixin(EntityType<?> type, Level world) {
 		super(type, world);
 	}
 

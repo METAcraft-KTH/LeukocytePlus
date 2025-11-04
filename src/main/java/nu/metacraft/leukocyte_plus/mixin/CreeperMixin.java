@@ -11,9 +11,9 @@ import nu.metacraft.leukocyte_plus.EventHelper;
 import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 
 @Mixin(Creeper.class)
-public abstract class MixinCreeperEntity extends Monster {
+public abstract class CreeperMixin extends Monster {
 
-	protected MixinCreeperEntity(EntityType<? extends Monster> entityType, Level world) {
+	protected CreeperMixin(EntityType<? extends Monster> entityType, Level world) {
 		super(entityType, world);
 	}
 

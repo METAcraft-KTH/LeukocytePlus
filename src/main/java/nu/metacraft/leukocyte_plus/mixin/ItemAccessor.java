@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(Item.class)
-public interface AccessorItem {
+public interface ItemAccessor {
 
 	@Invoker
 	static BlockHitResult callGetPlayerPOVHitResult(Level world, Player player, ClipContext.Fluid fluidHandling) {

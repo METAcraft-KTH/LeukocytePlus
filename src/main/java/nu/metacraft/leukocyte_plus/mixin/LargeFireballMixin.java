@@ -14,9 +14,9 @@ import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 import nu.metacraft.leukocyte_plus.events.FireEvents;
 
 @Mixin(LargeFireball.class)
-public abstract class MixinFireballEntity extends Fireball {
+public abstract class LargeFireballMixin extends Fireball {
 
-	public MixinFireballEntity(EntityType<? extends Fireball> entityType, Level world) {
+	public LargeFireballMixin(EntityType<? extends Fireball> entityType, Level world) {
 		super(entityType, world);
 	}
 

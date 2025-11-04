@@ -11,7 +11,7 @@ import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(Projectile.class)
-public class MixinProjectileEntity {
+public class ProjectileMixin {
 
 	@Inject(method = "mayBreak", at = @At("HEAD"), cancellable = true)
 	public void canBreakBlocks(ServerLevel world, CallbackInfoReturnable<Boolean> cir) {

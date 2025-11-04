@@ -10,13 +10,13 @@ import net.minecraft.server.level.ServerEntity;
 import net.minecraft.server.network.ServerPlayerConnection;
 
 @Mixin(ChunkMap.class)
-public interface AccessorServerChunkLoadingManager {
+public interface ChunkMapAccessor {
 
 	@Accessor
 	Int2ObjectMap<ChunkMap.TrackedEntity> getEntityMap();
 
 	@Mixin(ChunkMap.TrackedEntity.class)
-	interface EntityTracker {
+	interface TrackedEntity {
 		@Accessor
 		ServerEntity getServerEntity();
 

@@ -14,7 +14,7 @@ import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(BlockAttachedEntity.class)
-public class MixinBlockAttachedEntity {
+public class BlockAttachedEntityMixin {
 
 	@Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
 	public void onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {

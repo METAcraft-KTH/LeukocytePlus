@@ -28,9 +28,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.HitResult;
 import nu.metacraft.leukocyte_plus.events.*;
-import nu.metacraft.leukocyte_plus.mixin.AccessorBucketItem;
-import nu.metacraft.leukocyte_plus.mixin.AccessorItem;
-import nu.metacraft.leukocyte_plus.mixin.AccessorServerChunkLoadingManager;
+import nu.metacraft.leukocyte_plus.mixin.BucketItemAccessor;
+import nu.metacraft.leukocyte_plus.mixin.ItemAccessor;
+import nu.metacraft.leukocyte_plus.mixin.ChunkMapAccessor;
 import xyz.nucleoid.leukocyte.Leukocyte;
 import xyz.nucleoid.leukocyte.authority.IndexedAuthorityMap;
 import xyz.nucleoid.leukocyte.rule.ProtectionRule;
@@ -230,7 +230,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
 			return preventUse((player, hand, pos) -> {
 				var stack = player.getItemInHand(hand);
-				if (stack.getItem() instanceof AccessorBucketItem bucket && bucket.getContent().isSame(Fluids.WATER)) {
+				if (stack.getItem() instanceof BucketItemAccessor bucket && bucket.getContent().isSame(Fluids.WATER)) {
 					if (stack.getItem() instanceof MobBucketItem) {
 						return !player.level().getBlockState(pos).is(Blocks.WATER);
 					}
@@ -255,7 +255,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.LAVA_PLACE).orElse(
 				ruleMap.test(LeukocytePlusRules.FLUID_PLACE)
 		)).applySimple(ItemUseOnBlockEvent.EXCLUDE_FLUIDS, rule -> {
-			return preventUse(stack -> stack.getItem() instanceof AccessorBucketItem bucket && bucket.getContent().isSame(Fluids.LAVA), rule);
+			return preventUse(stack -> stack.getItem() instanceof BucketItemAccessor bucket && bucket.getContent().isSame(Fluids.LAVA), rule);
 		});
 
 		this.forRule(events, ruleMap.test(LeukocytePlusRules.PICKUP_FISH)).applySimple(EntityUseEvent.EVENT, rule -> {
@@ -316,12 +316,12 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 
 	protected void restoreEntityForClients(Entity entity) {
 		if (entity.level() instanceof ServerLevel world) {
-			var tracker = ((AccessorServerChunkLoadingManager) world.getChunkSource().chunkMap).getEntityMap().get(
+			var tracker = ((ChunkMapAccessor) world.getChunkSource().chunkMap).getEntityMap().get(
 					entity.getId()
 			);
 			restoreEntityForClients(
 					entity,
-					((AccessorServerChunkLoadingManager.EntityTracker) tracker).getSeenBy().stream().map(
+					((ChunkMapAccessor.TrackedEntity) tracker).getSeenBy().stream().map(
 							ServerPlayerConnection::getPlayer
 					),
 					tracker
@@ -333,12 +333,12 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 			Entity entity, Stream<ServerPlayer> players,
 			ChunkMap.TrackedEntity tracker
 	) {
-		var entry = ((AccessorServerChunkLoadingManager.EntityTracker) tracker).getServerEntity();
+		var entry = ((ChunkMapAccessor.TrackedEntity) tracker).getServerEntity();
 		players.forEach(player -> player.connection.send(entity.getAddEntityPacket(entry)));
 	}
 
 	protected void restoreEntityForClients(Entity entity, ServerLevel world, Stream<ServerPlayer> players) {
-		var tracker = ((AccessorServerChunkLoadingManager) world.getChunkSource().chunkMap).getEntityMap().get(
+		var tracker = ((ChunkMapAccessor) world.getChunkSource().chunkMap).getEntityMap().get(
 				entity.getId()
 		);
 		restoreEntityForClients(entity, players, tracker);
@@ -393,7 +393,7 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		return preventUse((player, hand, pos) -> {
 			var handStack = player.getItemInHand(hand);
 			if (handStack.is(Items.BUCKET) && rule == EventResult.DENY) {
-				var result = AccessorItem.callGetPlayerPOVHitResult(player.level(), player, ClipContext.Fluid.SOURCE_ONLY);
+				var result = ItemAccessor.callGetPlayerPOVHitResult(player.level(), player, ClipContext.Fluid.SOURCE_ONLY);
 				if (
 						result.getType() != HitResult.Type.MISS &&
 						(

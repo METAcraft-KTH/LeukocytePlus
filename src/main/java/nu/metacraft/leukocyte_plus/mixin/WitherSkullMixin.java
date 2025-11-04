@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import nu.metacraft.leukocyte_plus.EventHelper;
 
 @Mixin(WitherSkull.class)
-public abstract class MixinWitherSkullEntity extends AbstractHurtingProjectile {
+public abstract class WitherSkullMixin extends AbstractHurtingProjectile {
 
-	protected MixinWitherSkullEntity(EntityType<? extends AbstractHurtingProjectile> entityType, Level world) {
+	protected WitherSkullMixin(EntityType<? extends AbstractHurtingProjectile> entityType, Level world) {
 		super(entityType, world);
 	}
 

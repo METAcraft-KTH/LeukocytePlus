@@ -11,7 +11,7 @@ import xyz.nucleoid.stimuli.Stimuli;
 import xyz.nucleoid.stimuli.event.EventResult;
 
 @Mixin(Wolf.class)
-public class MixinWolfEntity {
+public class WolfMixin {
 
 	@Inject(method = "wantsToAttack", at = @At("HEAD"), cancellable = true)
 	public void canAttackWithOwner(LivingEntity target, LivingEntity owner, CallbackInfoReturnable<Boolean> cir) {
