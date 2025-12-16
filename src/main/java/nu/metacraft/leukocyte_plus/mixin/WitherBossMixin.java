@@ -16,15 +16,16 @@ public abstract class WitherBossMixin extends Monster {
 		super(entityType, world);
 	}
 
+	@SuppressWarnings("unchecked")
 	@ModifyExpressionValue(
 		method = "customServerAiStep",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/level/GameRules;getBoolean(Lnet/minecraft/world/level/GameRules$Key;)Z"
+			target = "Lnet/minecraft/world/level/gamerules/GameRules;get(Lnet/minecraft/world/level/gamerules/GameRule;)Ljava/lang/Object;"
 		)
 	)
-	public boolean mobTick(boolean original) {
-		return EventHelper.shouldWitherGrief(original, (WitherBoss) (Object) this, null);
+	public <T> T mobTick(T original) {
+		return (T) (Object) EventHelper.shouldWitherGrief((Boolean) original, (WitherBoss) (Object) this, null);
 	}
 
 	@ModifyExpressionValue(

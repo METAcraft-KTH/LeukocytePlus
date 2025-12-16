@@ -1,5 +1,6 @@
 package nu.metacraft.leukocyte_plus;
 
+import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
 import org.jetbrains.annotations.Nullable;
 import nu.metacraft.leukocyte_plus.events.ExplosionEvents;
 import nu.metacraft.leukocyte_plus.events.FireEvents;
@@ -14,7 +15,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.entity.projectile.WitherSkull;
 import net.minecraft.world.level.Level;
 
 public class EventHelper {

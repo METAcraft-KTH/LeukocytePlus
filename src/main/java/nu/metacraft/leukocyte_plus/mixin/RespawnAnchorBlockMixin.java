@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RespawnAnchorBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,7 +28,7 @@ public class RespawnAnchorBlockMixin {
 			)
 	)
 	public Level.ExplosionInteraction replaceSourceType(
-			Level.ExplosionInteraction original, BlockState state, Level world, final BlockPos explodedPos
+			Level.ExplosionInteraction original, BlockState state, ServerLevel world, final BlockPos explodedPos
 	) {
 		return EventHelper.getSourceType(original, ExplosionEvents.RESPAWN_ANCHOR, world, explodedPos, null);
 	}
@@ -36,11 +37,11 @@ public class RespawnAnchorBlockMixin {
 		method = "explode",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
+			target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		)
 	)
 	public void grabVarsForFireCheck(
-			BlockState state, Level world, BlockPos explodedPos, CallbackInfo ci,
+			BlockState state, ServerLevel world, BlockPos explodedPos, CallbackInfo ci,
 			@Share("world") LocalRef<Level> worldVar, @Share("pos") LocalRef<BlockPos> posVar
 	) {
 		worldVar.set(world);
@@ -51,7 +52,7 @@ public class RespawnAnchorBlockMixin {
 		method = "explode",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/world/level/Level;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
+			target = "Lnet/minecraft/server/level/ServerLevel;explode(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/damagesource/DamageSource;Lnet/minecraft/world/level/ExplosionDamageCalculator;Lnet/minecraft/world/phys/Vec3;FZLnet/minecraft/world/level/Level$ExplosionInteraction;)V"
 		),
 		index = 5
 	)
