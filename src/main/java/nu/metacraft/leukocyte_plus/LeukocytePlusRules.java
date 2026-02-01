@@ -43,6 +43,7 @@ public class LeukocytePlusRules {
 	public static final ProtectionRule LAVA_PICKUP = register("lava_pickup");
 	public static final ProtectionRule PLACE_FIRE = register("fire_place");
 	public static final ProtectionRule PROJECTILES_BREAK_BLOCKS = register("projectiles_break_blocks");
+	public static final ProtectionRule KEEP_INVENTORY = register("keep_inventory");
 
 
 	public static void init() {

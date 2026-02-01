@@ -312,6 +312,10 @@ public class LeukocytePlusEnforcer implements ProtectionRuleEnforcer {
 		this.forRule(events, ruleMap.test(ProtectionRule.ATTACK)).applySimple(ProjectileHitEvent.ENTITY, rule -> {
 			return (projectile, result) -> fixProjectile(projectile, rule);
 		});
+
+		this.forRule(events, ruleMap.test(LeukocytePlusRules.KEEP_INVENTORY)).applySimple(
+				KeepInventoryEvent.EVENT, rule -> player -> rule
+		);
 	}
 
 	protected void restoreEntityForClients(Entity entity) {
