@@ -13,6 +13,7 @@
 		"EndCrystalMixin",
 		"ItemAccessor",
 		"ItemFrameMixin",
+		"LivingEntityMixin",
 		"LargeFireballMixin",
 		"LightningBoltMixin",
 		"MinecartTNTMixin",
