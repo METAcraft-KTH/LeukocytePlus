@@ -25,7 +25,7 @@
 	"accessWidener": "leukocyte_plus.accesswidener",
 	"depends": {
 		"fabricloader": ">=${loader_version}",
-		"fabric": "*",
+		"fabric-api": "*",
 		"minecraft": "~${minecraft_version}",
 		"leukocyte": "*"
 	},
