@@ -60,7 +60,7 @@ dependencies {
 	include(implementation("me.lucko:fabric-permissions-api:${project.fabric_permissions_api_version}"))
 
 	implementation "xyz.nucleoid:stimuli:${project.stimuli_version}"
-	implementation("xyz.nucleoid:leukocyte:${project.leukocyte_version}")
+	implementation("maven.modrinth:leukocyte:${project.leukocyte_version}")
 }
 
 processResources {
@@ -89,7 +89,7 @@ java {
 
 jar {
 	from("LICENSE") {
-		rename { "${it}_${project.archivesBaseName}"}
+		rename { "${it}_${project.archives_base_name}"}
 	}
 }
 
